@@ -11,13 +11,9 @@ This package also allows old cached files to be pruned easily.
 > This is a pre-alpha release. It works but has some rough edges, and shouldn't be considered
 > production-ready for most use cases.
 
-## Installation
+## Getting started
 
-Add this package to `mix.exs`, then run `mix deps.get`:
-
-```elixir
-{:local_file_cacher, "0.1.0-alpha.1"},
-```
+### Configuration
 
 To configure this project, add the following to your runtime config (e.g. `config/runtime.exs`):
 
@@ -27,14 +23,23 @@ config :local_file_cacher,
   days_to_keep_cached_files: 7
 ```
 
-Then implement the callbacks in the desired location:
+#### Configurable items
+
+- `:base_path` - The root directory that all your temporary files will go into. (The files will be
+subdivided further into other subdirectories by `application_context` and
+`cache_subdirectory_path`, as we shall see later on.)
+
+- `:days_to_keep_cached_files` - The number of days that a file will be kept before it becomes
+eligible to be pruned. (The actual pruning is done by `LocalFileCacher.prune_file_cache/2`.)
+
+### Usage
+
+Now that the configuration is complete, you may call the functions directly, or create some
+wrapper functions:
 
 `lib/your_project/some_api.ex`
 ```elixir
 defmodule YourProject.SomeApi do
-  @behaviour LocalFileCacher
-
-  @impl true
   def save_file_to_cache(cache_subdirectory_path, file_contents) do
     LocalFileCacher.save_file_to_cache(
       _application_context = __MODULE__,
@@ -44,7 +49,6 @@ defmodule YourProject.SomeApi do
     )
   end
 
-  @impl true
   def prune_file_cache(cache_subdirectory_path),
     do: LocalFileCacher.prune_file_cache(__MODULE__, cache_subdirectory_path)
 
@@ -52,7 +56,7 @@ defmodule YourProject.SomeApi do
     cache_subdirectory_path = "some_endpoint"
 
     with {:ok, resp} <- Req.get("https://some-api.com/someEndpoint"),
-      :ok <- save_file_to_cache(cache_subdirectory_path, resp),
+      :ok <- save_file_to_cache(cache_subdirectory_path, resp.body),
       :ok <- process_response(resp) do
         prune_file_cache(cache_subdirectory_path)
       end
@@ -76,7 +80,7 @@ The cache directory path is determined by joining three values together:
 - The cache subdirectory path (e.g. `"some_endpoint"`)
 
 Using the above examples, the cache directory path would be
-`"/tmp/your_project/some_context/some_endpoint"`.
+`"/tmp/your_project/some_api/some_endpoint"`.
 
 ---
 
@@ -84,7 +88,7 @@ For more information, see [the module documentation](https://hexdocs.pm/local_fi
 
 ---
 
-This project made possible by Interline Travel and Tour Inc.:
+This project made possible by Interline Travel and Tour Inc.
 
 https://www.perx.com/
 

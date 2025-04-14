@@ -11,11 +11,15 @@ defmodule LocalFileCacher do
 
   ## Installation
 
-  Add this package to `mix.exs`, then run `mix deps.get`:
+  Add this package to your list of dependencies in `mix.exs`, then run `mix deps.get`:
 
   ```elixir
-  {:local_file_cacher, "0.1.0-alpha.1"},
+  {:local_file_cacher, "0.1.0-alpha.2"}
   ```
+
+  ## Getting started
+
+  ### Configuration
 
   To configure this project, add the following to your runtime config (e.g. `config/runtime.exs`):
 
@@ -25,14 +29,23 @@ defmodule LocalFileCacher do
     days_to_keep_cached_files: 7
   ```
 
-  Then implement the callbacks in the desired location:
+  #### Configurable items
+
+  - `:base_path` - The root directory that all your temporary files will go into. (The files will
+  be subdivided further into other subdirectories by `application_context` and
+  `cache_subdirectory_path`, as we shall see later on.)
+
+  - `:days_to_keep_cached_files` - The number of days that a file will be kept before it becomes
+  eligible to be pruned. (The actual pruning is done by `LocalFileCacher.prune_file_cache/2`.)
+
+  ### Usage
+
+  Now that the configuration is complete, you may call the functions directly, or create some
+  wrapper functions:
 
   `lib/your_project/some_api.ex`
   ```elixir
   defmodule YourProject.SomeApi do
-    @behaviour LocalFileCacher
-
-    @impl true
     def save_file_to_cache(cache_subdirectory_path, file_contents) do
       LocalFileCacher.save_file_to_cache(
         _application_context = __MODULE__,
@@ -42,7 +55,6 @@ defmodule LocalFileCacher do
       )
     end
 
-    @impl true
     def prune_file_cache(cache_subdirectory_path),
       do: LocalFileCacher.prune_file_cache(__MODULE__, cache_subdirectory_path)
 
@@ -50,7 +62,7 @@ defmodule LocalFileCacher do
       cache_subdirectory_path = "some_endpoint"
 
       with {:ok, resp} <- Req.get("https://some-api.com/someEndpoint"),
-        :ok <- save_file_to_cache(cache_subdirectory_path, resp),
+        :ok <- save_file_to_cache(cache_subdirectory_path, resp.body),
         :ok <- process_response(resp) do
           prune_file_cache(cache_subdirectory_path)
         end
@@ -74,7 +86,7 @@ defmodule LocalFileCacher do
   - The cache subdirectory path (e.g. `"some_endpoint"`)
 
   Using the above examples, the cache directory path would be
-  `"/tmp/your_project/some_context/some_endpoint"`.
+  `"/tmp/your_project/some_api/some_endpoint"`.
 
   ## Using the file cache
 
@@ -87,21 +99,15 @@ defmodule LocalFileCacher do
   cache at the same time as files are saved to it, this ensures that the cache size will not grow
   to an unreasonable level over time.
 
-  > #### Note {: .info}
-  >
-  > This is a "plumbing" module that probably shouldn't be called directly, but should be
-  > implemented as a behaviour using the `save_file_to_cache/3` and `prune_file_cache/1`
-  > callbacks.
-
   ### Saving files to the cache
 
-  To save a file to the cache, implement the `save_file_to_cache/3` callback for the context you
-  are working in (e.g. `YourProject.SomeApi.save_file_to_cache()`).
+  To save a file to the cache, call `LocalFileCacher.save_file_to_cache/5` with the relevant
+  parameters for the context in which you are working.
 
   ### Pruning (deleting old) files from the cache
 
-  To prune a part of the file cache, implement the `prune_file_cache/1` callback for the context
-  you are working in (e.g. `YourProject.SomeApi.prune_file_cache()`).
+  To prune a part of the file cache, call `LocalFileCacher.prune_file_cache/2` with the relevant
+  parameters for the context in which you are working.
 
   The number of days to keep a cached file/directory can be modified in the runtime application
   config (i.e. in `config/runtime.exs`).
@@ -110,16 +116,16 @@ defmodule LocalFileCacher do
 
   ## Application contexts
 
-  The `application_context` should always be an atom that represents the context of the
-  application you are working with.
+  The `application_context` is a module that represents the context of the application you are
+  working with.
 
   ### Application context examples
 
-  - When working in the `YourProject.SomeApi` context, the `application_context` is
+  - When working in the `YourProject.SomeApi` context, the `application_context` should be
   `YourProject.SomeApi`.
 
   - When working in the `YourProject.SomeApi.SomeCategory` context, the
-  `application_context` is `YourProject.SomeApi.SomeCategory`.
+  `application_context` should be `YourProject.SomeApi.SomeCategory`.
 
   Note that in the examples, the application context matches the value of the key in the config
   files that is used to configure that same context.
@@ -160,29 +166,24 @@ defmodule LocalFileCacher do
 
   require Logger
 
-  ## Callbacks ##
-
   @doc """
-  Wrap `YourProject.Services.FileCache.save_file_to_cache/5` by automatically passing the
-  `application_context` and `filename_suffix` when calling the wrapped function.
+  Generate a timestamp-esque string that conforms to the [Portable Filename Character
+  Set](https://www.ibm.com/docs/en/zvm/7.2?topic=files-naming), making it safe and convenient to
+  use as the name of a cached file or directory.
 
-  Used internally to manage the local file cache for a given context.
+  ## Examples
+
+      iex> YourProject.Services.FileCache.generate_filename_friendly_timestamp()
+      "2024-05-17-15-49-14-091430"
   """
-  @callback save_file_to_cache(
-              cache_subdirectory_path :: String.t(),
-              file_contents :: String.t(),
-              filename_prefix :: String.t() | nil
-            ) :: :ok
+  def generate_filename_friendly_timestamp do
+    date = Date.utc_today() |> Date.to_string()
 
-  @doc """
-  Wrap `YourProject.Services.FileCache.prune_file_cache/2` by automatically passing the
-  `application_context`.
+    time =
+      Time.utc_now() |> Time.to_string() |> String.replace(":", "-") |> String.replace(".", "-")
 
-  Used internally to manage the local file cache.
-  """
-  @callback prune_file_cache(cache_subdirectory_path :: String.t()) :: :ok
-
-  ## Functions ##
+    "#{date}-#{time}"
+  end
 
   @doc """
   Return a UNIX timestamp that can be used to indicate whether or not a cached file can be
@@ -199,24 +200,6 @@ defmodule LocalFileCacher do
       Application.fetch_env!(:local_file_cacher, :days_to_keep_cached_files) * 24 * 60 * 60
 
     (_current_unix_timestamp = System.os_time(:second)) - seconds_to_keep_cached_files
-  end
-
-  @doc """
-  Generate a timestamp-esque string that conforms to the Portable Filename Character Set, making
-  it safe and convenient to use as the name of a cached file or directory.
-
-  ## Examples
-
-      iex> YourProject.Services.FileCache.generate_filename_friendly_timestamp()
-      "2024-05-17-15-49-14-091430"
-  """
-  def generate_filename_friendly_timestamp do
-    date = Date.utc_today() |> Date.to_string()
-
-    time =
-      Time.utc_now() |> Time.to_string() |> String.replace(":", "-") |> String.replace(".", "-")
-
-    "#{date}-#{time}"
   end
 
   @doc """
@@ -285,45 +268,32 @@ defmodule LocalFileCacher do
       get_file_cache_directory_path(application_context, cache_subdirectory_path)
 
     if File.exists?(file_cache_directory_path) do
-      do_prune_file_cache(file_cache_directory_path)
-    else
-      :ok
-    end
-  end
+      files_or_directories_to_prune =
+        file_cache_directory_path
+        |> File.ls!()
+        # Get the full path to each file by prepending the cache directory path
+        |> Enum.map(&Path.join(file_cache_directory_path, &1))
+        |> Enum.filter(&cached_item_is_old_enough_to_be_deleted?/1)
 
-  defp do_prune_file_cache(file_cache_directory_path) do
-    files_or_directories_to_prune =
-      file_cache_directory_path
-      |> File.ls!()
-      # Get the full path to each file by prepending the cache directory path
-      |> Enum.map(&Path.join(file_cache_directory_path, &1))
-      |> Enum.filter(&cached_item_is_old_enough_to_be_deleted?/1)
-
-    if Enum.empty?(files_or_directories_to_prune) do
-      Logger.debug("""
-      No files or directories need to be deleted from the `#{file_cache_directory_path}` file \
-      cache.\
-      """)
-    else
-      files_or_directories_to_prune
-      |> Enum.each(fn stale_file_or_directory_name ->
-        File.rm_rf!(stale_file_or_directory_name)
-
+      if Enum.empty?(files_or_directories_to_prune) do
         Logger.debug("""
-        Pruned stale item from the "#{file_cache_directory_path}" file cache: \
-        `#{stale_file_or_directory_name}`\
+        No files or directories need to be deleted from the `#{file_cache_directory_path}` file \
+        cache.\
         """)
-      end)
+      else
+        files_or_directories_to_prune
+        |> Enum.each(fn stale_file_or_directory_name ->
+          File.rm_rf!(stale_file_or_directory_name)
+
+          Logger.debug("""
+          Pruned stale item from the "#{file_cache_directory_path}" file cache: \
+          `#{stale_file_or_directory_name}`\
+          """)
+        end)
+      end
     end
 
     :ok
-  end
-
-  defp cached_item_is_old_enough_to_be_deleted?(file_path) do
-    file_modified_at_timestamp = file_path |> File.stat!(time: :posix) |> Map.fetch!(:mtime)
-    cutoff_timestamp = get_cutoff_timestamp()
-
-    if file_modified_at_timestamp < cutoff_timestamp, do: true, else: false
   end
 
   @doc """
@@ -398,6 +368,14 @@ defmodule LocalFileCacher do
     :ok
   end
 
-  # Return the configured root directory of the file cache (e.g. "tmp").
+  # Check if file is old enough to be deleted based on its current modification timestamp.
+  defp cached_item_is_old_enough_to_be_deleted?(file_path) do
+    file_modified_at_timestamp = file_path |> File.stat!(time: :posix) |> Map.fetch!(:mtime)
+    cutoff_timestamp = get_cutoff_timestamp()
+
+    if file_modified_at_timestamp < cutoff_timestamp, do: true, else: false
+  end
+
+  # Return the configured root directory of the file cache (e.g. "/tmp").
   defp get_base_path, do: Application.fetch_env!(:local_file_cacher, :base_path)
 end
