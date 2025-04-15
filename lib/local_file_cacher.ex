@@ -178,6 +178,7 @@ defmodule LocalFileCacher do
       iex> YourProject.Services.FileCache.generate_filename_friendly_timestamp()
       "2024-05-17-15-49-14-091430"
   """
+  @spec generate_filename_friendly_timestamp :: String.t()
   def generate_filename_friendly_timestamp do
     date = Date.utc_today() |> Date.to_string()
 
@@ -197,6 +198,7 @@ defmodule LocalFileCacher do
       iex> YourProject.Services.FileCache.get_cutoff_timestamp()
       1715978870
   """
+  @spec get_cutoff_timestamp :: non_neg_integer()
   def get_cutoff_timestamp do
     seconds_to_keep_cached_files =
       Application.fetch_env!(:local_file_cacher, :days_to_keep_cached_files) * 24 * 60 * 60
@@ -216,6 +218,7 @@ defmodule LocalFileCacher do
       ...> )
       "/tmp/your_project/some_api/some_endpoint"
   """
+  @spec get_file_cache_directory_path(module(), String.t()) :: String.t()
   def get_file_cache_directory_path(application_context, cache_subdirectory_path) do
     base_file_cache_directory_path = get_base_path()
 
@@ -346,6 +349,13 @@ defmodule LocalFileCacher do
       ...> )
       :ok
   """
+  @spec save_file_to_cache(
+          application_context :: module(),
+          cache_subdirectory_path :: String.t(),
+          file_contents :: binary(),
+          filename_suffix :: String.t(),
+          filename_prefix :: String.t() | nil
+        ) :: :ok | {:error, File.posix()}
   def save_file_to_cache(
         application_context,
         cache_subdirectory_path,
