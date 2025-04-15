@@ -166,6 +166,8 @@ defmodule LocalFileCacher do
 
   require Logger
 
+  @disallowed_base_paths ["lib", "test"]
+
   @doc """
   Generate a timestamp-esque string that conforms to the [Portable Filename Character
   Set](https://www.ibm.com/docs/en/zvm/7.2?topic=files-naming), making it safe and convenient to
@@ -227,8 +229,8 @@ defmodule LocalFileCacher do
         cache_subdirectory_path
       ])
 
-    # Do not allow modification of the root file cache directory (cached files must be namespaced
-    # to an application context, otherwise unexpected files may be added or deleted)
+    # Sanity check: Do not allow modification of the root file cache directory. (Cached files must
+    # be namespaced to an application context, otherwise unexpected files may be added or deleted)
     if file_cache_directory_path == get_base_path(),
       do: raise("refusing to modify the root file cache directory")
 
@@ -266,6 +268,11 @@ defmodule LocalFileCacher do
   def prune_file_cache(application_context, cache_subdirectory_path) do
     file_cache_directory_path =
       get_file_cache_directory_path(application_context, cache_subdirectory_path)
+
+    # Sanity check: Do not allow modification of the root file cache directory. (Cached files must
+    # be namespaced to an application context, otherwise unexpected files may be added or deleted)
+    if file_cache_directory_path == get_base_path(),
+      do: raise("refusing to modify the root file cache directory")
 
     if File.exists?(file_cache_directory_path) do
       files_or_directories_to_prune =
@@ -377,5 +384,14 @@ defmodule LocalFileCacher do
   end
 
   # Return the configured root directory of the file cache (e.g. "/tmp").
-  defp get_base_path, do: Application.fetch_env!(:local_file_cacher, :base_path)
+  defp get_base_path do
+    base_path = Application.fetch_env!(:local_file_cacher, :base_path)
+
+    # Sanity check: Ensure the user has not configured a disallowed base path
+    if base_path in @disallowed_base_paths do
+      raise "base_path must not be any of: #{inspect(@disallowed_base_paths)}"
+    end
+
+    base_path
+  end
 end
