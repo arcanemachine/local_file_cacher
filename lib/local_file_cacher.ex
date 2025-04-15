@@ -36,7 +36,7 @@ defmodule LocalFileCacher do
   `cache_subdirectory_path`, as we shall see later on.)
 
   - `:days_to_keep_cached_files` - The number of days that a file will be kept before it becomes
-  eligible to be pruned. (The actual pruning is done by `LocalFileCacher.prune_file_cache/2`.)
+  eligible to be pruned. (The actual pruning is done by `LocalFileCacher.prune_file_cache!/2`.)
 
   ### Usage
 
@@ -55,8 +55,8 @@ defmodule LocalFileCacher do
       )
     end
 
-    def prune_file_cache(cache_subdirectory_path),
-      do: LocalFileCacher.prune_file_cache(__MODULE__, cache_subdirectory_path)
+    def prune_file_cache!(cache_subdirectory_path),
+      do: LocalFileCacher.prune_file_cache!(__MODULE__, cache_subdirectory_path)
 
     def get_data_from_some_endpoint do
       cache_subdirectory_path = "some_endpoint"
@@ -64,7 +64,7 @@ defmodule LocalFileCacher do
       with {:ok, resp} <- Req.get("https://some-api.com/someEndpoint"),
         :ok <- save_file_to_cache(cache_subdirectory_path, resp.body),
         :ok <- process_response(resp) do
-          prune_file_cache(cache_subdirectory_path)
+          prune_file_cache!(cache_subdirectory_path)
         end
       end
     end
@@ -106,7 +106,7 @@ defmodule LocalFileCacher do
 
   ### Pruning (deleting old) files from the cache
 
-  To prune a part of the file cache, call `LocalFileCacher.prune_file_cache/2` with the relevant
+  To prune a part of the file cache, call `LocalFileCacher.prune_file_cache!/2` with the relevant
   parameters for the context in which you are working.
 
   The number of days to keep a cached file/directory can be modified in the runtime application
@@ -247,12 +247,12 @@ defmodule LocalFileCacher do
 
   Prune cached files saved from SomeAPI's `someEndpoint` endpoint:
 
-      iex> YourProject.Services.FileCache.prune_file_cache(YourProject.SomeApi, "some_endpoint")
+      iex> YourProject.Services.FileCache.prune_file_cache!(YourProject.SomeApi, "some_endpoint")
       :ok
 
   Prune cached directories/files saved from SomeAPI's `someCategory/someEndpoint` endpoint:
 
-      iex> YourProject.Services.FileCache.prune_file_cache(
+      iex> YourProject.Services.FileCache.prune_file_cache!(
       ...>   _application_context = YourProject.SomeApi,
       ...>   _cache_subdirectory_path = Path.join(["some_category, "some_endpoint"])
       ...> )
@@ -260,10 +260,10 @@ defmodule LocalFileCacher do
 
   Prune cached directories/files saved from some API's "someEndpoint" endpoint:
 
-      iex> LocalFileCacher.prune_file_cache(YourProject.SomeApi, "some_endpoint")
+      iex> LocalFileCacher.prune_file_cache!(YourProject.SomeApi, "some_endpoint")
       :ok
   """
-  def prune_file_cache(application_context, cache_subdirectory_path) do
+  def prune_file_cache!(application_context, cache_subdirectory_path) do
     file_cache_directory_path =
       get_file_cache_directory_path(application_context, cache_subdirectory_path)
 
