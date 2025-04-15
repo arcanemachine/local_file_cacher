@@ -31,11 +31,9 @@ defmodule LocalFileCacher do
 
   #### Configurable items
 
-  - `:base_path` - The root directory that all your temporary files will go into. (The files will
-  be subdivided further into other subdirectories by `application_context` and
-  `cache_subdirectory_path`, as we shall see later on.)
+  - `:base_path` - The root directory that all your temporary files will go into.
 
-  - `:days_to_keep_cached_files` - The number of days that a file will be kept before it becomes
+  - `:days_to_keep_cached_files` - The number of days that a file will be kept before it is
   eligible to be pruned. (The actual pruning is done by `LocalFileCacher.prune_file_cache!/2`.)
 
   ### Usage
@@ -46,25 +44,25 @@ defmodule LocalFileCacher do
   `lib/your_project/some_api.ex`
   ```elixir
   defmodule YourProject.SomeApi do
-    def save_file_to_cache(cache_subdirectory_path, file_contents) do
+    def save_file_to_cache(file_cache_subdirectory_path, file_contents) do
       LocalFileCacher.save_file_to_cache(
         _application_context = __MODULE__,
-        cache_subdirectory_path,
+        file_cache_subdirectory_path,
         file_contents,
         _filename_suffix = "json"
       )
     end
 
-    def prune_file_cache!(cache_subdirectory_path),
-      do: LocalFileCacher.prune_file_cache!(__MODULE__, cache_subdirectory_path)
+    def prune_file_cache!(file_cache_subdirectory_path),
+      do: LocalFileCacher.prune_file_cache!(__MODULE__, file_cache_subdirectory_path)
 
     def get_data_from_some_endpoint do
-      cache_subdirectory_path = "some_endpoint"
+      file_cache_subdirectory_path = "some_endpoint"
 
       with {:ok, resp} <- Req.get("https://some-api.com/someEndpoint"),
-        :ok <- save_file_to_cache(cache_subdirectory_path, resp.body),
+        :ok <- save_file_to_cache(file_cache_subdirectory_path, resp.body),
         :ok <- process_response(resp) do
-          prune_file_cache!(cache_subdirectory_path)
+          prune_file_cache!(file_cache_subdirectory_path)
         end
       end
     end
@@ -132,17 +130,17 @@ defmodule LocalFileCacher do
 
   ## Cache subdirectory paths
 
-  A `cache_subdirectory_path` represents the subdirectory path of the file cache that is being
-  used for the specific type of file being cached. Use a consistent naming strategy to ensure that
-  files for each endpoint end up in their own subdirectory.
+  A `file_cache_subdirectory_path` represents the subdirectory path of the file cache that is
+  being used for the specific type of file being cached. Use a consistent naming strategy to
+  ensure that files for each endpoint end up in their own subdirectory.
 
   ### Cache subdirectory path examples
 
   - SomeAPI's `someEndpoint` endpoint: The endpoint's relative URL path could be used as the
-  `cache_subdirectory_path`: `"some_endpoint"`
+  `file_cache_subdirectory_path`: `"some_endpoint"`
 
   - SomeAPI's `someCategory/someEndpoint` endpoint: The endpoint's relative URL path could be used
-  as the `cache_subdirectory_path`, e.g. `Path.join("some_category", "some_endpoint")`.
+  as the `file_cache_subdirectory_path`, e.g. `Path.join("some_category", "some_endpoint")`.
 
   > #### Tip {: .tip}
   >
@@ -249,7 +247,8 @@ defmodule LocalFileCacher do
   end
 
   @doc """
-  Prune cached files/directories from a given `application_context` and `cache_subdirectory_path`.
+  Prune cached files/directories from a given `application_context` and
+  `file_cache_subdirectory_path`.
 
   ## Examples
 
@@ -271,9 +270,9 @@ defmodule LocalFileCacher do
       iex> LocalFileCacher.prune_file_cache!(YourProject.SomeApi, "some_endpoint")
       :ok
   """
-  def prune_file_cache!(application_context, cache_subdirectory_path) do
+  def prune_file_cache!(application_context, file_cache_subdirectory_path) do
     file_cache_directory_path =
-      get_file_cache_directory_path(application_context, cache_subdirectory_path)
+      get_file_cache_directory_path(application_context, file_cache_subdirectory_path)
 
     # Sanity check: Do not allow modification of the root file cache directory. (Cached files must
     # be namespaced to an application context, otherwise unexpected files may be added or deleted)
@@ -310,9 +309,9 @@ defmodule LocalFileCacher do
   end
 
   @doc """
-  Save `file_contents` to a given `application_context` and `cache_subdirectory_path` with a given
-  `filename_suffix` (e.g. `"json"`, `"txt"`, `"xml"`) and optional `filename_prefix` (i.e. the
-  part of the filename before the dot).
+  Save `file_contents` to a given `application_context` and `file_cache_subdirectory_path` with a
+  given `filename_suffix` (e.g. `"json"`, `"txt"`, `"xml"`) and optional `filename_prefix` (i.e.
+  the part of the filename before the dot).
 
   If `filename_prefix` is `nil`, then a timestamp-esque file prefix will be generated via
   `generate_filename_friendly_timestamp/0`.
@@ -347,20 +346,20 @@ defmodule LocalFileCacher do
   """
   @spec save_file_to_cache(
           application_context :: module(),
-          cache_subdirectory_path :: String.t(),
+          file_cache_subdirectory_path :: String.t(),
           file_contents :: binary(),
           filename_suffix :: String.t(),
           filename_prefix :: String.t() | nil
         ) :: :ok | {:error, File.posix()}
   def save_file_to_cache(
         application_context,
-        cache_subdirectory_path,
+        file_cache_subdirectory_path,
         file_contents,
         filename_suffix,
         filename_prefix \\ nil
       ) do
     file_cache_directory_path =
-      get_file_cache_directory_path(application_context, cache_subdirectory_path)
+      get_file_cache_directory_path(application_context, file_cache_subdirectory_path)
 
     filename_prefix =
       if is_nil(filename_prefix),

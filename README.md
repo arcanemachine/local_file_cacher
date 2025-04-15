@@ -25,12 +25,10 @@ config :local_file_cacher,
 
 #### Configurable items
 
-- `:base_path` - The root directory that all your temporary files will go into. (The files will be
-subdivided further into other subdirectories by `application_context` and
-`cache_subdirectory_path`, as we shall see later on.)
+- `:base_path` - The root directory that all your temporary files will go into.
 
-- `:days_to_keep_cached_files` - The number of days that a file will be kept before it becomes
-eligible to be pruned. (The actual pruning is done by `LocalFileCacher.prune_file_cache/2`.)
+- `:days_to_keep_cached_files` - The number of days that a file will be kept before it is
+eligible to be pruned. (The actual pruning is done by `LocalFileCacher.prune_file_cache!/2`.)
 
 ### Usage
 
@@ -40,25 +38,25 @@ wrapper functions:
 `lib/your_project/some_api.ex`
 ```elixir
 defmodule YourProject.SomeApi do
-  def save_file_to_cache(cache_subdirectory_path, file_contents) do
+  def save_file_to_cache(file_cache_subdirectory_path, file_contents) do
     LocalFileCacher.save_file_to_cache(
       _application_context = __MODULE__,
-      cache_subdirectory_path,
+      file_cache_subdirectory_path,
       file_contents,
       _filename_suffix = "json"
     )
   end
 
-  def prune_file_cache(cache_subdirectory_path),
-    do: LocalFileCacher.prune_file_cache(__MODULE__, cache_subdirectory_path)
+  def prune_file_cache(file_cache_subdirectory_path),
+    do: LocalFileCacher.prune_file_cache(__MODULE__, file_cache_subdirectory_path)
 
   def get_data_from_some_endpoint do
-    cache_subdirectory_path = "some_endpoint"
+    file_cache_subdirectory_path = "some_endpoint"
 
     with {:ok, resp} <- Req.get("https://some-api.com/someEndpoint"),
-      :ok <- save_file_to_cache(cache_subdirectory_path, resp.body),
+      :ok <- save_file_to_cache(file_cache_subdirectory_path, resp.body),
       :ok <- process_response(resp) do
-        prune_file_cache(cache_subdirectory_path)
+        prune_file_cache!(file_cache_subdirectory_path)
       end
     end
   end
@@ -67,9 +65,10 @@ end
 
 ## Project overview
 
-The code in this module works on specific "application contexts" and "cache subdirectory paths".
+The code in this module works on specific "application contexts" and "file cache subdirectory
+paths".
 
-The cache directory path is determined by joining three values together:
+The file cache directory path is determined by joining three values together:
 
 - The base directory path for the entire file cache (e.g. `"/tmp"`).
   - This value can be modified in the runtime application config (i.e. in `config/runtime.exs`):
