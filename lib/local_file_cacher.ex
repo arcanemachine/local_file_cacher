@@ -14,7 +14,7 @@ defmodule LocalFileCacher do
   Add this package to your list of dependencies in `mix.exs`, then run `mix deps.get`:
 
   ```elixir
-  {:local_file_cacher, "0.1.0-alpha.2"}
+  {:local_file_cacher, "0.1.0-alpha.3"}
   ```
 
   ## Getting started
@@ -56,7 +56,7 @@ defmodule LocalFileCacher do
     def prune_file_cache!(file_cache_subdirectory_path),
       do: LocalFileCacher.prune_file_cache!(__MODULE__, file_cache_subdirectory_path)
 
-    def get_data_from_some_endpoint do
+    def get_some_endpoint do
       file_cache_subdirectory_path = "some_endpoint"
 
       with {:ok, resp} <- Req.get("https://some-api.com/someEndpoint"),

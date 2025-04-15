@@ -3,7 +3,7 @@ defmodule LocalFileCacher.MixProject do
 
   @project_name "Local File Cacher"
   @source_url "https://github.com/arcanemachine/local_file_cacher"
-  @version "0.1.0-alpha.2"
+  @version "0.1.0-alpha.3"
 
   def project do
     [

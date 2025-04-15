@@ -50,7 +50,7 @@ defmodule YourProject.SomeApi do
   def prune_file_cache(file_cache_subdirectory_path),
     do: LocalFileCacher.prune_file_cache(__MODULE__, file_cache_subdirectory_path)
 
-  def get_data_from_some_endpoint do
+  def get_some_endpoint do
     file_cache_subdirectory_path = "some_endpoint"
 
     with {:ok, resp} <- Req.get("https://some-api.com/someEndpoint"),

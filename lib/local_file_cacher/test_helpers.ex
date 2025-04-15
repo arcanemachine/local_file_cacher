@@ -51,7 +51,7 @@ defmodule LocalFileCacher.TestHelpers do
         File.mkdir_p!(@some_endpoint_file_cache_directory_path)
         File.mkdir_p!(@some_other_endpoint_file_cache_directory_path)
 
-        # Delete the all cached files for this category after the tests have completed
+        # Delete all cached files for this category after the tests have completed
         on_exit(fn -> File.rm_rf!(@base_file_cache_directory_path) end)
       end
     end
@@ -65,14 +65,14 @@ defmodule LocalFileCacher.TestHelpers do
   test "saves data to the local file cache" do
     LocalFileCacher.TestHelpers.assert_files_have_been_saved_to_local_cache(
       @file_cache_directory_path,
-      fn -> YourProject.SomeApi.get_data_from_some_endpoint() end
+      &YourProject.SomeApi.get_some_endpoint/0
     )
   end
 
   test "prunes old data from the local file cache" do
     LocalFileCacher.TestHelpers.assert_old_files_are_pruned_from_local_cache(
       @file_cache_directory_path,
-      fn -> YourProject.SomeApi.get_data_from_some_endpoint() end
+      &YourProject.SomeApi.get_some_endpoint/0
     )
   end
   ```
@@ -82,7 +82,7 @@ defmodule LocalFileCacher.TestHelpers do
 
   @doc """
   Execute a zero-arity `callback`, then assert that one or more files have been saved to the
-  expected `file_cache_directory_path`.
+  given `file_cache_directory_path`.
 
   ## Examples
 
@@ -105,6 +105,18 @@ defmodule LocalFileCacher.TestHelpers do
     assert final_cached_file_count > initial_cached_file_count
   end
 
+  @doc """
+  Execute a zero-arity `callback`, then assert that old files are pruned from the
+  given `file_cache_directory_path`.
+
+  ## Examples
+
+      iex> LocalFileCacher.TestAssertions.assert_old_files_are_pruned_from_local_cache(
+      ...>   "/tmp/path/to/your/cached/files",
+      ...>   &YourProject.SomeApi.get_some_endpoint/0
+      ...> )
+      :ok
+  """
   @spec assert_old_files_are_pruned_from_local_cache(String.t(), (-> any())) :: any()
   def assert_old_files_are_pruned_from_local_cache(file_cache_directory_path, callback) do
     # Ensure file cache directory exists
