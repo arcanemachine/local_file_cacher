@@ -243,11 +243,6 @@ defmodule LocalFileCacher do
   @doc """
   Prune cached files/directories from a given `application_context` and `cache_subdirectory_path`.
 
-  > #### Note {: .info}
-  >
-  > This function is intended to be used to build wrapper functions for your specific contexts,
-  > e.g. `YourProject.SomeApi.prune_file_cache()`.
-
   ## Examples
 
   Prune cached files saved from SomeAPI's `someEndpoint` endpoint:
@@ -313,13 +308,6 @@ defmodule LocalFileCacher do
 
   If `filename_prefix` is `nil`, then a timestamp-esque file prefix will be generated via
   `generate_filename_friendly_timestamp/0`.
-
-  > #### Note {: .info}
-  >
-  > This function is used to build wrapper functions for specific contexts, e.g.
-  > `YourProject.SomeApi.save_file_to_cache()`. You probably shouldn't call this
-  > function directly. Instead, implement the `save_file_to_cache/2` callback for the context you
-  > are working in.
 
   ## Examples
 
