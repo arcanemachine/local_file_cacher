@@ -207,19 +207,27 @@ defmodule LocalFileCacher do
   end
 
   @doc """
-  Return the file cache directory path for a given `application_context` and
-  `cache_subdirectory_path`.
+  Return the file cache directory path for a given `application_context` and optional
+  `file_cache_subdirectory_path`.
 
   ## Examples
+
+  Get the file cache directory path for a given endpoint:
 
       iex> YourProject.Services.FileCache.get_file_cache_directory_path(
       ...>   YourProject.SomeApi,
       ...>   "some_endpoint"
       ...> )
       "/tmp/your_project/some_api/some_endpoint"
+
+  To get the base file cache directory path for all endpoints in a given category, simply omit the
+  `file_cache_subdirectory_path` argument:
+
+      iex> YourProject.Services.FileCache.get_file_cache_directory_path(YourProject.SomeApi)
+      "/tmp/your_project/some_api"
   """
   @spec get_file_cache_directory_path(module(), String.t()) :: String.t()
-  def get_file_cache_directory_path(application_context, cache_subdirectory_path) do
+  def get_file_cache_directory_path(application_context, file_cache_subdirectory_path \\ "") do
     base_file_cache_directory_path = get_base_path()
 
     parsed_application_context_path =
@@ -229,7 +237,7 @@ defmodule LocalFileCacher do
       Path.join([
         base_file_cache_directory_path,
         parsed_application_context_path,
-        cache_subdirectory_path
+        file_cache_subdirectory_path
       ])
 
     # Sanity check: Do not allow modification of the root file cache directory. (Cached files must
