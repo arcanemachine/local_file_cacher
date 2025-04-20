@@ -13,6 +13,14 @@ This package also allows old cached files to be pruned easily.
 
 ## Getting started
 
+### Installation
+
+Add this package to your list of dependencies in `mix.exs`, then run `mix deps.get`:
+
+```elixir
+{:local_file_cacher, "0.1.0"}
+```
+
 ### Configuration
 
 To configure this project, add the following to your runtime config (e.g. `config/runtime.exs`):
@@ -63,27 +71,9 @@ defmodule YourProject.SomeApi do
 end
 ```
 
-## Project overview
-
-The code in this module works on specific "application contexts" and "file cache subdirectory
-paths".
-
-The file cache directory path is determined by joining three values together:
-
-- The base directory path for the entire file cache (e.g. `"/tmp"`).
-  - This value can be modified in the runtime application config (i.e. in `config/runtime.exs`):
-    - `config :local_file_cacher, base_path: System.tmp_dir()`
-
-- The application context (e.g. `YourProject.SomeApi`)
-
-- The cache subdirectory path (e.g. `"some_endpoint"`)
-
-Using the above examples, the cache directory path would be
-`"/tmp/your_project/some_api/some_endpoint"`.
-
 ---
 
-For more information, see [the module documentation](https://hexdocs.pm/local_file_cacher/LocalFileCacher.html).
+For more information, see [this project's documentation](https://hexdocs.pm/local_file_cacher/LocalFileCacher.html).
 
 ---
 
