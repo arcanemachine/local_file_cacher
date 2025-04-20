@@ -3,7 +3,7 @@ defmodule LocalFileCacher.MixProject do
 
   @project_name "Local File Cacher"
   @source_url "https://github.com/arcanemachine/local_file_cacher"
-  @version "0.1.0-alpha.3"
+  @version "0.1.0"
 
   def project do
     [
@@ -15,7 +15,7 @@ defmodule LocalFileCacher.MixProject do
 
       # Hex
       description:
-        "(PRE-ALPHA, NOT PRODUCTION-READY) Create a local file cache for files (e.g. API responses), and prune it to remove old files.",
+        "(NOT PRODUCTION-READY) Create a local file cache for files (e.g. API responses), and prune it to remove old files.",
       package: package(),
 
       # Docs

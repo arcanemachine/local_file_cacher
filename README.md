@@ -8,7 +8,7 @@ This package also allows old cached files to be pruned easily.
 
 > #### Warning
 >
-> This is a pre-alpha release. It works but has some rough edges, and shouldn't be considered
+> This is very early release. It works but has some rough edges, and shouldn't be considered
 > production-ready for most use cases.
 
 ## Getting started
