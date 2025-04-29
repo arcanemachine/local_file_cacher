@@ -1,15 +1,15 @@
 # LocalFileCacher
 
+> #### Warning
+>
+> This is very early release. It works but has some rough edges, and shouldn't be considered
+> production-ready for most use cases.
+
 This package manages a local file cache. The local file cache may be used, for example, to ensure
 that you have backups of files saved when making HTTP requests to API providers. The cached files
 can be used, for example, to quickly restore backups from the saved responses.
 
 This package also allows old cached files to be pruned easily.
-
-> #### Warning
->
-> This is very early release. It works but has some rough edges, and shouldn't be considered
-> production-ready for most use cases.
 
 ## Getting started
 
@@ -18,7 +18,7 @@ This package also allows old cached files to be pruned easily.
 Add this package to your list of dependencies in `mix.exs`, then run `mix deps.get`:
 
 ```elixir
-{:local_file_cacher, "0.1.0"}
+{:local_file_cacher, "0.1.1"}
 ```
 
 ### Configuration
