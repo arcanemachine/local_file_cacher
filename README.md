@@ -18,7 +18,7 @@ This package also allows old cached files to be pruned easily.
 Add this package to your list of dependencies in `mix.exs`, then run `mix deps.get`:
 
 ```elixir
-{:local_file_cacher, "0.1.1"}
+{:local_file_cacher, "0.1.2"}
 ```
 
 ### Configuration

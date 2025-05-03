@@ -3,7 +3,7 @@ defmodule LocalFileCacher.MixProject do
 
   @project_name "Local File Cacher"
   @source_url "https://github.com/arcanemachine/local_file_cacher"
-  @version "0.1.1"
+  @version "0.1.2"
 
   def project do
     [
@@ -40,7 +40,10 @@ defmodule LocalFileCacher.MixProject do
   defp docs do
     [
       main: @project_name,
-      extras: ["README.md"],
+      extras: [
+        "README.md": [title: "Readme"],
+        "CHANGELOG.md": [title: "Changelog"]
+      ],
       formatters: ["html"],
       main: "readme"
     ]
